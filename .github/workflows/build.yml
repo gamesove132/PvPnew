@@ -25,4 +25,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: PvPnew
-          path: target/PvPnew-1.0.1.jar
+          path: target/*.jar
