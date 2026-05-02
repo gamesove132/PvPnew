@@ -27,13 +27,23 @@ public class PvpListener implements Listener {
         if (!(e.getDamager() instanceof Player attacker)) return;
         if (attacker.equals(victim)) return;
 
+        // Перевіряємо ДО тегування — чи вже в бою
+        boolean attackerWasInCombat = plugin.getPvpManager().isInCombat(attacker);
+        boolean victimWasInCombat = plugin.getPvpManager().isInCombat(victim);
+
+        // Тепер тегуємо
         plugin.getPvpManager().tagPlayers(attacker, victim);
 
-        // Повідомлення про вхід в бій
-        if (!plugin.getPvpManager().isInCombat(attacker)) return;
-        String msg = plugin.getConfig().getString("messages.combat-start", "&c⚔ Ви в бою!");
-        attacker.sendMessage(ChatColor.translateAlternateColorCodes('&', msg));
-        victim.sendMessage(ChatColor.translateAlternateColorCodes('&', msg));
+        // Повідомлення тільки якщо щойно ВПЕРШЕ увійшли в бій
+        String msg = ChatColor.translateAlternateColorCodes('&',
+                plugin.getConfig().getString("messages.combat-start", "&c⚔ Ви в бою!"));
+
+        if (!attackerWasInCombat) {
+            attacker.sendMessage(msg);
+        }
+        if (!victimWasInCombat) {
+            victim.sendMessage(msg);
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -41,18 +51,17 @@ public class PvpListener implements Listener {
         Player player = e.getPlayer();
         if (!plugin.getPvpManager().isInCombat(player)) return;
 
-        // Заборонені команди з конфігу
         List<String> blocked = plugin.getConfig().getStringList("blocked-commands");
-        String cmd = e.getMessage().toLowerCase().split(" ")[0].substring(1); // без /
+        String cmd = e.getMessage().toLowerCase().split(" ")[0].substring(1);
 
-        // Блокуємо всі команди якщо block-all-commands: true
         boolean blockAll = plugin.getConfig().getBoolean("block-all-commands", true);
 
         if (blockAll || blocked.contains(cmd)) {
             e.setCancelled(true);
-            String msg = plugin.getConfig().getString("messages.command-blocked",
-                    "&cНе можна використовувати команди під час бою!");
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', msg));
+            String msg = ChatColor.translateAlternateColorCodes('&',
+                    plugin.getConfig().getString("messages.command-blocked",
+                            "&cНе можна використовувати команди під час бою!"));
+            player.sendMessage(msg);
         }
     }
 
